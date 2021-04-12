@@ -8,9 +8,9 @@ class Particle:
 		self.xmin = xmin
 		self.xmax = xmax
 		self.speed = [0] * ndim
-		self.p_best = [0] * ndim
-		self.g_best = [0] * ndim
+		self.g_best = None
 		self.coord = self.__initial_coord()
+		self.p_best = self.coord.copy()
 		self.neighbors = []
 
 	def __initial_coord(self):
@@ -30,6 +30,15 @@ class Particle:
 		len_n = len(self.neighbors)
 		for i in range(0, len_n):
 			self.neighbors[i].update_fitness()
+		
+		self.update_gbest()
+	
+	def update_gbest(self):
+		best_particle = min(self.neighbors, key=lambda x: x.fitness)
+		if self.g_best == None:
+			self.g_best = best_particle.coord
+		elif best_particle.fitness < self.calc_fitness(self.g_best):
+			self.g_best = best_particle.coord
 
 	def update_fitness(self):
 		self.fitness = self.__colville(self.coord)
@@ -43,19 +52,12 @@ class Particle:
 			    10.1*((x2 - 1)**2 + (x4 - 1)**2) + 19.8*(x2 - 1)*(x4 - 1))
 
 	def update_speed(self, W, C1, C2):
-		prev_speed = self.speed[-1]
+		prev_speed = self.speed
 		r1, r2 = random.random(), random.random()
 
-		self.update_gbest()
-
 		for i in range(0, self.ndim):
-			self.speed[i] = ((W * prev_speed) + (C1 * r1 * (self.p_best[i] - self.coord[i])) +
+			self.speed[i] = ((W * prev_speed[i]) + (C1 * r1 * (self.p_best[i] - self.coord[i])) +
 							 (C2 * r2 * (self.g_best[i] - self.coord[i])))
-	
-	def update_gbest(self):
-		best_particle = min(self.neighbors, key=lambda x: x.fitness)
-		if best_particle.fitness < self.calc_fitness(self.g_best):
-			self.g_best = best_particle.coord 
 
 	def update_position(self):
 		self.coord = [(self.coord[i] + self.speed[i]) for i in range(0, self.ndim)]
