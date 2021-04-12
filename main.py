@@ -15,6 +15,7 @@ def generation_log(particle_cloud):
     median_fit = np.median(particle_fitness)
     std_fit = np.std(particle_fitness)
     best_solution = min(particle_cloud, key=lambda x: x.calc_fitness(x.g_best))
+    # return best_solution, mean_fit, median_fit, std_fit
     return best_solution.calc_fitness(best_solution.g_best), mean_fit, median_fit, std_fit
 
 if __name__ == "__main__":

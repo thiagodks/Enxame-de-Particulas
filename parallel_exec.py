@@ -20,7 +20,6 @@ def run(prmt):
 
     particle_cloud = [Particle(xmin=p['XMIN'], xmax=p['XMAX']) for _ in range(0, p["M"])]
     log_fitness = []
-
     for _ in range(0, p["MAX_ITR"]):
 
         # Insere os vizinhos de cada particula
@@ -48,13 +47,15 @@ def run(prmt):
             particle_cloud[i] = current_particle
         
         log_fitness.append(generation_log(particle_cloud))
+    
+    return log_fitness, p
 
 MAX_ITR = [50, 100, 150, 200, 250]
 M = [100, 200, 300, 400, 500]
 W = [0.1, 0.15, 0.2]
 C1 = [0.1, 0.15, 0.2]
 C2 = [0.1, 0.15, 0.2]
-XMIN = [10]
+XMIN = [-10]
 XMAX = [10]
 
 all_list = [MAX_ITR, M, W, C1, C2, XMIN, XMAX]
@@ -65,4 +66,4 @@ num_args = len(parameters)
 chunksize = int(num_args/multiprocessing.cpu_count())
 results = [i for i in tqdm(executor.map(run, parameters),total=num_args)]
 
-pickle.dump(results, open("results_"+len(parameters)+"_.pickle", "wb"))
+pickle.dump(results, open("Results/results_"+str(len(parameters))+"_.pickle", "wb"))

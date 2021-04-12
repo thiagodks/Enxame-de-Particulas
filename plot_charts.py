@@ -1,5 +1,9 @@
 import matplotlib.pyplot as plt
 from termcolor import colored
+import pickle
+import pandas as pd
+from datetime import datetime
+import argparse
 
 def plot_graphics(gen_log, args, name=""):
 
@@ -31,3 +35,68 @@ def plot_graphics(gen_log, args, name=""):
 
 	print(colored("\033[1m"+"-> Gráfico salvo em: ", "green"), 'Graficos/'+name+"_"+str(args)+'_.pdf')
 	fig.savefig('Graficos/'+name+"_"+str(args)+'_.pdf')
+
+def plot_table(results):
+
+	table = {"$\\bf{ITR}$": [],
+			"$\\bf{M}$": [],
+			"$\\bf{W}$": [],
+			"$\\bf{C1}$": [],
+			"$\\bf{C2}$": [],
+			"$\\bf{XMIN}$": [],
+			"$\\bf{XMAX}$": [],
+			"$\\bf{FIT}$": [],
+			"$\\bf{MD}$": [],
+			"$\\bf{ME}$": [],
+			"$\\bf{STD}$": []}
+
+	for i in results:
+		# print(i)
+		# input("")
+		cs = min(i[0], key=lambda x: x[0])
+		table["$\\bf{ITR}$"].append(i[1]["MAX_ITR"])
+		table["$\\bf{M}$"].append(i[1]["M"])
+		table["$\\bf{W}$"].append(i[1]["W"])
+		table["$\\bf{C1}$"].append(i[1]["C1"])
+		table["$\\bf{C2}$"].append(i[1]["C2"])
+		table["$\\bf{XMIN}$"].append(i[1]["XMIN"])
+		table["$\\bf{XMAX}$"].append(i[1]["XMAX"])
+		table["$\\bf{FIT}$"].append("%.3f" % cs[0])
+		table["$\\bf{ME}$"].append("%.2f" % cs[1])
+		table["$\\bf{MD}$"].append("%.2f" % cs[2])
+		table["$\\bf{STD}$"].append("%.2f" % cs[3])
+
+	df = pd.DataFrame(data=table)
+
+	fig, ax = plt.subplots()
+
+	fig.patch.set_visible(False)
+	plt.axis("off")
+	plt.grid("off")
+	fig.set_size_inches(4, 2)
+	ax.set_title("Top-20 Execuções", y=1.65, fontdict={"fontsize": 6}, weight='bold')
+
+	ncol = len(table.keys())
+	colors = [["#ccccb3"] * ncol, ["#e0e0d1"] * ncol] * int(len(results)/2)
+	the_table = ax.table(cellText=df.values,colLabels=df.columns, cellColours=colors, cellLoc="center", loc="center", colColours =["#78786d"] * ncol)
+	the_table.auto_set_font_size(False)
+	the_table.set_fontsize(5)
+
+	fig.tight_layout()
+	now = datetime.now()
+	current_time = now.strftime("%H:%M:%S")
+	fig.savefig("Tabelas/results_table_"+str(current_time)+".pdf", dpi=500, bbox_inches='tight')
+	print(colored("\033[1m"+"\n-> Tabela salva em: " + "Tabelas/results_table_"+str(current_time)+".pdf", "green"))
+	print("\nTabela: \n", df)
+
+if __name__ == "__main__":
+	parser = argparse.ArgumentParser()
+	parser.add_argument('-f', required=True, type=str, help='Arquivo com os resultados fatoriais')
+	args = vars(parser.parse_args())
+	results = pickle.load(open(args['f'], 'rb'))
+	results.sort(key=lambda x: min(x[0], key=lambda x: x[0]))
+	# for r in results:
+		# print(r[0][0][-1], r[0][1][-1], r[0][2][-1], r[0][3][-1])
+		# print(min(r[0], key=lambda x: x[0]))
+		# input("")
+	plot_table(results[:20])
