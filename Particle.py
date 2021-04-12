@@ -11,15 +11,34 @@ class Particle:
 		self.p_best = [0] * ndim
 		self.g_best = [0] * ndim
 		self.coord = self.__initial_coord()
-		
+		self.neighbors = []
+
 	def __initial_coord(self):
 		return [random.uniform(self.xmin, self.xmax) for _ in range(self.ndim)]
 
-	def calc_fitness(self):
-		self.fitness = self.__colville()
+	def set_neighbors(self, possible_neighbors, neighborhood="general"):
+		def general_neighbor(possible_neighbors):
+			return possible_neighbors
+		def two_neighbor(possible_neighbors):
+			return possible_neighbors
 
-	def __colville(self):
-		x1, x2, x3, x4 = self.coord
+		if neighborhood == "general":
+			self.neighbors = general_neighbor(possible_neighbors)
+		elif neighborhood == "two":
+			self.neighbors = two_neighbor(possible_neighbors)
+
+		len_n = len(self.neighbors)
+		for i in range(0, len_n):
+			self.neighbors[i].update_fitness()
+
+	def update_fitness(self):
+		self.fitness = self.__colville(self.coord)
+
+	def calc_fitness(self, coord):
+		return self.__colville(coord)
+
+	def __colville(self, coord):
+		x1, x2, x3, x4 = coord
 		return (100*(x1 - (x2**2))**2 + (1 - x1)**2 + 90*(x4 - x3)**2 + (1 - x3)**2 +
 			    10.1*((x2 - 1)**2 + (x4 - 1)**2) + 19.8*(x2 - 1)*(x4 - 1))
 
@@ -27,20 +46,19 @@ class Particle:
 		prev_speed = self.speed[-1]
 		r1, r2 = random.random(), random.random()
 
+		self.update_gbest()
+
 		for i in range(0, self.ndim):
 			self.speed[i] = ((W * prev_speed) + (C1 * r1 * (self.p_best[i] - self.coord[i])) +
 							 (C2 * r2 * (self.g_best[i] - self.coord[i])))
-		
+	
+	def update_gbest(self):
+		best_particle = min(self.neighbors, key=lambda x: x.fitness)
+		if best_particle.fitness < self.calc_fitness(self.g_best):
+			self.g_best = best_particle.coord 
+
 	def update_position(self):
 		self.coord = [(self.coord[i] + self.speed[i]) for i in range(0, self.ndim)]
 		for i in range(0, self.ndim):
 			if self.coord[i] > self.xmax: self.coord[i] = self.xmax
 			elif self.coord[i] < self.xmin: self.coord[i] = self.xmin
-
-particle = Particle()
-particle.calc_fitness()
-print(particle.fitness, particle.coord, particle.speed)
-particle.update_speed(W=0.5, C1=0.1, C2=0.1)
-particle.update_position()
-particle.calc_fitness()
-print("new values:", particle.fitness, particle.coord, particle.speed)
